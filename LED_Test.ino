@@ -48,7 +48,7 @@ void loop() {
   
   // Display current time and debug info
   printDateTime(getCurrentTime());
-  displayCurrentTime();
+  // displayCurrentTime();  // Commented out for web server testing
   
   // Update every 5 seconds
   delay(5000);
