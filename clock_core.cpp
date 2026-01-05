@@ -1,41 +1,48 @@
-#include <Adafruit_NeoPixel.h>
-#include <RTClib.h>
+#include "clock_core.h"
 
-#define NUM_LEDS 114 //Count of LEDs
-#define DATA_PIN 23 //ID of the Pin for data transfer from ESP32 to NeoPixlel LED strip
-//#define DEBUG
-
+// Hardware objects
 Adafruit_NeoPixel pixels(NUM_LEDS, DATA_PIN, NEO_RGB + NEO_KHZ800);
 RTC_DS3231 rtc;
+
+// Configuration variables
 int brightnessRed = 0;
 int brightnessGreen = 20;
 int brightnessBlue = 10;
 
-//#include <time.h>
-//const char *ntpServer = "pool.ntp.org";
-//const long gmtOffset_sec = 3600;
-//const int daylightOffset_sec = 3600;
-//#include <WiFi.h>
-//#include <WebServer.h>
-//WebServer server;
-//#include <AutoConnect.h>
-//AutoConnect portal(server);
-//AutoConnectConfig config;
-//bool UpdateChecked = false;
+// Timezone configuration
+const long gmtOffset_sec = 3600;
+const int daylightOffset_sec = 3600;
+const char *ntpServer = "pool.ntp.org";
+const unsigned long WEB_SERVER_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
 
-void setLed(int number, int value_r, int value_g, int value_b){
-  pixels.setPixelColor(number, pixels.Color(value_g, value_r, value_b, 0));
+// Timezone adjustment
+int wintertimeAdjustSeconds = 1 * 60 * 60; //UTC +1 hour
+int summerTimeAdjustSeconds = 2 * 60 * 60; //UTC +2 hour
+
+// Calculate if current date/time is in summer time (DST) for Germany
+// Returns true if summer time is active, false otherwise
+bool isSummerTime(const DateTime& dt) {
+  // Calculate last Sunday in March (DST starts at 2:00 AM)
+  int startDay = (31 - (5 * dt.year() / 4 + 4) % 7);
+
+  // Calculate last Sunday in October (DST ends at 3:00 AM)
+  int endDay = (31 - (5 * dt.year() / 4 + 1) % 7);
+
+  DateTime startSummerTime(dt.year(), 3, startDay, 2, 0, 0);  // Last Sunday in March, 2:00 AM
+  DateTime endSummerTime(dt.year(), 10, endDay, 3, 0, 0);     // Last Sunday in October, 3:00 AM
+
+  return (dt >= startSummerTime && dt < endSummerTime);
 }
 
-void setup() {
+void initializeClock() {
   Serial.begin(115200);
 
-  //Pixel
-  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+  // Initialize NeoPixel strip
+  pixels.begin();
   pixels.clear();
   pixels.show();
 
-  //RTC
+  // Initialize RTC
   bool rtcInitSuccessful = rtc.begin();
   if(rtcInitSuccessful){
     Serial.println("rtc init successful");
@@ -44,199 +51,42 @@ void setup() {
     Serial.println("rtc init not successful");
   }
 
-  if (rtc.lostPower())
-  {
+  if (rtc.lostPower()) {
     Serial.println("RTC lost power. Battery was removed or is empty.");
   }
-
-  //DateTime time = DateTime(2022, 12, 22, 19, 11, 0);
-  //rtc.adjust(time);
-  //Wifi
-    //Serial.println("server...");
-    // Responder of root page and apply page handled directly from WebServer class.
-    //server.on("/", []() {
-      //String content = R"(
-        //<meta name="viewport" content="width=device-width, initial-scale=1.0">
-        //<html>
-        //<body>
-        //<button onclick="window.location.href='http://wortuhr/_ac'">Wlan und Updates</button>
-        //</body>
-       // </html>
-      //)";
-     // server.send(200, "text/html", content);
-   // });
-  //Autoconnect configuration
-  //Serial.println("auto config...");
-  //config.ota = AC_OTA_BUILTIN;
-  //config.autoReconnect = true;
-  //config.title = "Wortuhr";
-  //config.apid = "Wortuhr";
-  //portal.config(config);
- // portal.begin();
-  //Serial.println("get time...");
-  //getTime();
 }
 
-/*
-void getTime()
-{
-  Serial.println("config time...");
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  Serial.println("config time done");
-
-  delay(1000);
-
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo))
-  {
-    Serial.println("could not get time try 1");
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    delay(4000);
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    delay(3000);
-    if (!getLocalTime(&timeinfo))
-    {
-      Serial.println("could not get time try 2");
-    }
-    else{
-      Serial.println("get time try 2 successfull");
-    }
-  }
-  else{
-      Serial.println("get time try 1 successfull");
-  }
-}
-*/
-
-
-void showEverySecondLed(){
-  for (int i = 0; i < NUM_LEDS; i++) {
-
-    if(i % 2 == 0){
-      setLed(i, 100, 0, 0);
-    }
-    else{
-      setLed(i, 0, 0, 0);
-    }
-  }
-
-  pixels.show();
-  delay(500);
-
-  for (int i = 0; i < NUM_LEDS; i++) {
-   if(i % 2 == 0){
-      setLed(i, 0, 0, 0);
-    }
-   else{
-      setLed(i, 100, 0, 0);
-    }
-  }
-
-  pixels.show();
-  delay(500);
+void setLed(int number, int value_r, int value_g, int value_b){
+  pixels.setPixelColor(number, pixels.Color(value_g, value_r, value_b, 0));
 }
 
-void showSpecificLed(){
-  setLed(0, 100, 0, 0);
-  setLed(1, 0, 100, 0);
-  setLed(2, 0, 0, 100);
-  setLed(3, 100, 100, 100);
-  pixels.show();
-  delay(2000);
-  pixels.clear();
-
-  setLed(0, 0, 0, 0);
-  setLed(2, 0, 0, 0);
-  setLed(2, 0, 0, 0);
-  setLed(3, 0, 0, 0);
-  pixels.show();
-  delay(500);
-}
-
-
-
-int posi1 = 0;
-int posi2 = 1;
-int posi3 = 2;
-
-void showRunningLights(){
-  setLed(posi1, 50, 0, 0);
-  setLed(posi2, 0, 50, 0);
-  setLed(posi3, 0, 0, 50);
-  if(posi1 == 0){
-   setLed(NUM_LEDS - 1, 0, 0, 0);  
-  }
-  else{
-    setLed(posi1 - 1, 0, 0, 0); 
-  }
-
-  pixels.show();
-
-  posi1++;
-  if(posi1 == NUM_LEDS){
-    posi1 = 0;
-  }
-
-  posi2++;
-  if(posi2 == NUM_LEDS){
-    posi2 = 0;
-  }
-
-  posi3++;
-  if(posi3 == NUM_LEDS){
-    posi3 = 0;
-  }
-}
-
-void letAllShine(){
-  for(int i = 0; i < NUM_LEDS; i++){
-      setLed(i, 10, 10, 10);
-  }
-
-    pixels.show();
-}
-
-void checkForTimeUpdate(){
-  Serial.println("waiting for time input...");
-  if (Serial.available()) { // if there is data comming
-    String input = Serial.readStringUntil('\n'); // read string until newline character
-    //Dummy utc in epoch seconds time: 1672670580
-
-    if(input.equals("clear")){
-        pixels.clear();
-    }
-    else if(input.length() == 10){
-      Serial.println("trying to adjust the rtc time to new value");
-      rtc.adjust(DateTime(input.toInt()));
-      pixels.clear();
-    }
-    else{ //set imput as epoch seconds string
-    Serial.println("unknown what to do with input: " + input);
-    }
-  }
-}
-
-int wintertimeAdjustSeconds = 1 * 60 * 60; //UTC +1 hour
-int summerTimeAdjustSeconds = 2 * 60 * 60; //UTC +2 hour
-
-DateTime getCurrentTime(){
-  DateTime now = rtc.now();
-  int currentMonth = now.month();
-
-  if(currentMonth > 4 && currentMonth < 10){ //summertime in germany from april to november
-    return DateTime(now.unixtime() + summerTimeAdjustSeconds);
-  }
-  else{
-    return DateTime(now.unixtime() + wintertimeAdjustSeconds);
-  }
+void setLedOn(int position){
+  setLed(position, brightnessRed, brightnessGreen, brightnessBlue); 
 }
 
 void setLedOff(int position){
   setLed(position, 0, 0, 0); 
 }
 
-void setLedOn(int position){
-  setLed(position, brightnessRed, brightnessGreen, brightnessBlue); 
+void clearAllLEDs() {
+  pixels.clear();
+  pixels.show();
+}
+
+void setRTCTime(int year, int month, int day, int hour, int minute, int second) {
+  DateTime newTime(year, month, day, hour, minute, second);
+  rtc.adjust(newTime);
+}
+
+DateTime getCurrentTime(){
+  DateTime now = rtc.now();
+
+  if(isSummerTime(now)){
+    return DateTime(now.unixtime() + summerTimeAdjustSeconds);
+  }
+  else{
+    return DateTime(now.unixtime() + wintertimeAdjustSeconds);
+  }
 }
 
 void printDateTime(DateTime time){
@@ -425,35 +275,12 @@ void displayCurrentTime()
       setLedOn(i);
     }
 
-/*
-    for (int i = 88; i < 95; i++) //done
-    { //Zwanzig
-      setLedOn(i);
-    }
-
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
-      setLedOn(i);
-    }
-*/
     break;
 
   case 5:
     #if defined(DEBUG)
       Serial.println("tm_min / 5 = 5");
     #endif
-
-/*
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
-      setLedOff(i);
-    }
-
-    for (int i = 88; i < 95; i++) //done
-    { //Zwanzig
-      setLedOff(i);
-    }
-*/
 
     for (int i = 95; i < 99; i++) //done
     { // Zehn
@@ -517,8 +344,6 @@ void displayCurrentTime()
       setLedOn(i);
     }
 
-
-
     for (int i = 55; i < 59; i++) //done
     { //Halb
       setLedOn(i);
@@ -531,16 +356,6 @@ void displayCurrentTime()
       Serial.println("tm_min / 5 = 8");
     #endif
 
-/*
-    for (int i = 88; i < 95; i++)
-    { //Zwanzig
-      setLedOn(i);
-    }
-      for (int i = 74; i < 77; i++) //done
-    { // Vor
-      setLedOn(i);
-    }
-    */
     for (int i = 106; i < 110; i++) //done
     { //Fünf
       setLedOff(i);
@@ -570,21 +385,6 @@ void displayCurrentTime()
       Serial.println("tm_min / 5 = 9");
     #endif
 
-/*
-    for (int i = 88; i < 95; i++) //done
-    { //Zwanzig
-      setLedOff(i);
-    }
-    for (int i = 81; i < 88; i++) //done
-    { //Viertel
-      setLedOn(i);
-    }
-    for (int i = 74; i < 77; i++) //done
-    { // Vor
-      setLedOn(i);
-    }
-    */
-
     for (int i = 95; i < 99; i++) //done
     { // Zehn
       setLedOff(i);
@@ -608,13 +408,6 @@ void displayCurrentTime()
     #if defined(DEBUG)
       Serial.println("tm_min / 5 = 10");
     #endif
-
-/*
-    for (int i = 81; i < 88; i++) //done
-    { //Viertel
-      setLedOff(i);
-    }
-*/
 
     for (int i = 77; i < 88; i++) //done
     { //Dreiviertel
@@ -839,35 +632,3 @@ void displayCurrentTime()
   
   pixels.show();   // Send the updated pixel colors to the hardware.
 }
-
-void testCornerLeds(){
-setLed(113, 10, 0, 0); 
-  setLed(112, 10, 0, 0); 
-  setLed(111, 10, 0, 0); 
-  setLed(110, 10, 0, 0); 
-  pixels.show();
-  delay(5000); //sleep 10 sec
-  setLed(113, 0, 10, 0); 
-  setLed(112, 0, 10, 0); 
-  setLed(111, 0, 10, 0); 
-  setLed(110, 0, 10, 0); 
-  pixels.show();
-  delay(5000); //sleep 10 sec
-  setLed(113, 0, 0, 10); 
-  setLed(112, 0, 0, 10); 
-  setLed(111, 0, 0, 10); 
-  setLed(110, 0, 0, 10); 
-  pixels.show();
-  delay(5000); //sleep 10 sec
-}
-
-
-void loop() {
-  checkForTimeUpdate();
-  printDateTime(getCurrentTime());
-  //letAllShine();
-  displayCurrentTime(); 
-  delay(5000);
-  Serial.println("-----------------");
-}
-
