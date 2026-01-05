@@ -8,7 +8,9 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 - Real-time clock with DS3231 RTC module for accurate timekeeping
 - Automatic German timezone adjustment (UTC+1/UTC+2 for summer time)
 - Minute precision indicators with corner LEDs
-- Serial interface for time setting
+- **Web-based configuration interface** with mDNS support (http://wortuhr.local)
+- WiFi Access Point mode for easy setup
+- Serial interface for time setting (alternative)
 - Customizable LED brightness and colors
 
 ## Hardware Requirements
@@ -35,19 +37,22 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 
 - Arduino IDE 1.8.x or newer
 - ESP32 board package for Arduino IDE
-- Required libraries (install via Arduino Library Manager):
-  - Adafruit NeoPixel
-  - RTClib by Adafruit
+- Required libraries (install via Arduino Library Manager) with all needed Dependencies:
+  - "Adafruit_NeoPixel"
+  - "RTClib"
+  - WiFi (included with ESP32 board package)
+  - WebServer (included with ESP32 board package)
+  - ESPmDNS (included with ESP32 board package)
 
 ### Installation
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/LED_Test.git
-   cd LED_Test
+   git clone https://github.com/FrederikHartung/wortuhr.git
+   cd wortuhr
    ```
 
-2. Open `LED_Test.ino` in Arduino IDE
+2. Open `Wortuhr.ino` in Arduino IDE
 
 3. Install required libraries:
    - Go to Tools → Manage Libraries
@@ -67,6 +72,18 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 ## Usage
 
 ### First Setup
+
+#### Option 1: Web Interface (Recommended)
+
+1. **Power on the device**: The WiFi access point starts automatically
+2. **Connect to WiFi**:
+   - Network name: "Wortuhr"
+   - Password: "wortuhr123"
+3. **Open web browser**: Navigate to http://wortuhr.local or http://192.168.4.1
+4. **Set the time**: Use the date and time picker to set the current time
+5. **Auto-shutdown**: The web server automatically shuts down after 30 minutes to save power
+
+#### Option 2: Serial Interface
 
 1. **Set the time**: Open Serial Monitor (115200 baud) and send a 10-digit epoch timestamp to set the RTC time. You can get the current epoch time from [epochconverter.com](https://epochconverter.com).
 
@@ -124,13 +141,25 @@ The LEDs are arranged to form German time words. The layout includes:
 
 ## Development
 
+### Code Structure
+
+The project is organized into multiple modules:
+
+- **Wortuhr.ino** - Main program entry point
+- **config.h** - Hardware and configuration constants
+- **clock_core.h/cpp** - Core timekeeping and LED display logic
+- **web_interface.h/cpp** - Web server for time configuration
+- **led_tests.h/cpp** - LED testing functions (optional)
+- **utilities.h/cpp** - Utility functions (serial interface, etc.)
+
 ### Adding Features
 
-The code structure makes it easy to modify:
+The modular code structure makes it easy to modify:
 
-- **Change LED layout**: Modify the LED number ranges in `displayCurrentTime()`
+- **Change LED layout**: Modify the LED number ranges in `clock_core.cpp`
 - **Add animations**: Create new functions and call them in `loop()`
-- **Web interface**: Uncomment the WiFi code sections for web-based configuration
+- **Web interface customization**: Edit `web_interface.cpp` for UI changes
+- **WiFi settings**: Update credentials in `web_interface.h` or `config.h`
 
 ### Testing Functions
 

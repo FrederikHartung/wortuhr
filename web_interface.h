@@ -3,17 +3,24 @@
 
 #include <WiFi.h>
 #include <WebServer.h>
-#include <AutoConnect.h>
+#include <ESPmDNS.h>
 #include "config.h"
 
 // Web server objects
 extern WebServer server;
-extern AutoConnect portal;
-extern AutoConnectConfig config;
 
 // Web server state
 extern unsigned long webServerStartTime;
 extern bool webServerActive;
+
+// WiFi credentials - set these in config.h or define them here
+#ifndef WIFI_SSID
+#define WIFI_SSID "Wortuhr"  // Default AP name
+#endif
+
+#ifndef WIFI_PASSWORD
+#define WIFI_PASSWORD "wortuhr123"  // Default AP password (min 8 chars)
+#endif
 
 // Function declarations
 void startWebServer();

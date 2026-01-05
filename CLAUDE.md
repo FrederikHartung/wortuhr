@@ -16,7 +16,7 @@ This is an Arduino project for a German word clock (Wortuhr) that displays time 
 The project is organized into multiple modules:
 
 ### Core Files
-- **LED_Test.ino** - Main program entry point and loop
+- **Wortuhr.ino** - Main program entry point and loop
 - **config.h** - Hardware and configuration constants
 - **clock_core.h/cpp** - Core timekeeping and LED display logic
 - **web_interface.h/cpp** - Web server for time configuration
@@ -46,7 +46,7 @@ Corner LEDs 110-113 indicate minutes within each 5-minute interval.
 This is an Arduino project - use Arduino IDE or PlatformIO for compilation and upload:
 
 ### Arduino IDE
-- Open `LED_Test.ino` in Arduino IDE
+- Open `Wortuhr.ino` in Arduino IDE
 - Select ESP32 board type
 - Upload via USB connection
 
@@ -63,6 +63,19 @@ pio run -t upload # Upload to device
 - Default brightness: Red=0, Green=20, Blue=10
 
 ## Time Setting
+
+### Web Interface (Recommended)
+- Connect to WiFi access point "Wortuhr" (password: "wortuhr123")
+- Access via http://wortuhr.local or http://192.168.4.1
+- Web server automatically starts on power-up and shuts down after 30 minutes
+- Features:
+  - German language interface
+  - Date and time picker for easy configuration
+  - Auto-refreshing timeout countdown
+  - mDNS support for friendly hostname
+  - UTF-8 encoded for proper emoji display
+
+### Serial Interface (Alternative)
 Send epoch timestamp (10 digits) via Serial at 115200 baud to update RTC time.
 Send "clear" via Serial to turn off all LEDs.
 
@@ -88,3 +101,7 @@ Send "clear" via Serial to turn off all LEDs.
 
 ### Backup
 - Original unorganized code is saved as `LED_Test_backup.ino`
+
+## Project Naming
+- Main file: `Wortuhr.ino`
+- Project directory should be named `Wortuhr` (Arduino requires folder name to match .ino filename)

@@ -39,7 +39,6 @@ void setup() {
 void loop() {
   // Handle web server if active
   if (webServerActive) {
-    portal.handleRequest();
     checkWebServerTimeout();
   }
   

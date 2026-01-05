@@ -3,9 +3,7 @@
 #include <RTClib.h>
 
 // Web server objects
-WebServer server;
-AutoConnect portal(server);
-AutoConnectConfig config;
+WebServer server(80);
 
 // Web server state
 unsigned long webServerStartTime = 0;
@@ -13,27 +11,39 @@ bool webServerActive = false;
 
 void startWebServer() {
   Serial.println("Starting WiFi and Web Server...");
-  
-  // Configure AutoConnect
-  config.ota = AC_OTA_BUILTIN;
-  config.autoReconnect = true;
-  config.title = "Wortuhr";
-  config.apid = "Wortuhr";
-  portal.config(config);
-  
+
+  // Start WiFi in Access Point mode
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(WIFI_SSID, WIFI_PASSWORD);
+
+  // Print connection info
+  IPAddress IP = WiFi.softAPIP();
+  Serial.println("Access Point started");
+  Serial.print("AP SSID: ");
+  Serial.println(WIFI_SSID);
+  Serial.print("Access via: http://");
+  Serial.println(IP);
+  Serial.println("Default IP is usually: http://192.168.4.1");
+
   // Set up web server routes
   server.on("/", handleRoot);
   server.on("/settime", HTTP_POST, handleSetTime);
   server.on("/status", handleStatus);
-  
-  // Start the portal
-  if (portal.begin()) {
-    Serial.println("Web server started successfully");
-    Serial.print("Access via: http://");
-    Serial.println(WiFi.localIP());
+
+  // Start the web server
+  server.begin();
+  webServerActive = true;
+  webServerStartTime = millis();
+
+  // Start mDNS responder
+  if (MDNS.begin("wortuhr")) {
+    Serial.println("mDNS responder started");
+    Serial.println("Access via: http://wortuhr.local");
   } else {
-    Serial.println("Failed to start web server");
+    Serial.println("Error setting up mDNS responder!");
   }
+
+  Serial.println("Web server started successfully");
 }
 
 void handleRoot() {
@@ -43,8 +53,9 @@ void handleRoot() {
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wortuhr - Time Setting</title>
+    <title>Wortuhr - Zeiteinstellung</title>
     <style>
         body { font-family: Arial; margin: 20px; background: #f0f0f0; }
         .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
@@ -59,30 +70,39 @@ void handleRoot() {
 </head>
 <body>
     <div class="container">
-        <h1>🕐 Wortuhr Configuration</h1>
+        <h1>🕐 Wortuhr Konfiguration</h1>
         
         <div class="time-display">
-            <div>Current Time:</div>
+            <div>Aktuelle Uhrzeit:</div>
             <div class="current-time">)" + String(now.day()) + "." + String(now.month()) + "." + String(now.year()) + R"( )" + 
             String(now.hour()) + ":" + (now.minute() < 10 ? "0" : "") + String(now.minute()) + ":" + (now.second() < 10 ? "0" : "") + String(now.second()) + R"(</div>
         </div>
         
         <form action="/settime" method="POST">
-            <h3>Set New Time:</h3>
+            <h3>Neue Uhrzeit einstellen:</h3>
             <input type="date" name="date" value=")" + String(now.year()) + "-" + (now.month() < 10 ? "0" : "") + String(now.month()) + "-" + (now.day() < 10 ? "0" : "") + String(now.day()) + R"(" required>
             <input type="time" name="time" value=")" + (now.hour() < 10 ? "0" : "") + String(now.hour()) + ":" + (now.minute() < 10 ? "0" : "") + String(now.minute()) + R"(" required>
-            <button type="submit">Set Time</button>
+            <button type="submit">Uhrzeit setzen</button>
         </form>
         
         <div class="status">
-            <strong>Status:</strong><br>
-            Web server will shut down automatically in )" + String((WEB_SERVER_TIMEOUT - (millis() - webServerStartTime)) / 60000) + R"( minutes<br>
-            LED Count: )" + String(NUM_LEDS) + R"(<br>
-            RTC Status: Active
+            Der Webserver wird automatisch in <span id="remainingTime">)" + String((WEB_SERVER_TIMEOUT - (millis() - webServerStartTime)) / 60000) + R"(</span> Minuten heruntergefahren
         </div>
-        
-        <button onclick="window.location.href='/status'">Refresh Status</button>
     </div>
+
+    <script>
+        // Update remaining time every minute
+        setInterval(async function() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                const remainingMinutes = Math.floor(data.remaining_seconds / 60);
+                document.getElementById('remainingTime').textContent = remainingMinutes;
+            } catch (error) {
+                console.error('Error updating time:', error);
+            }
+        }, 60000); // Update every 60 seconds
+    </script>
 </body>
 </html>
   )";
@@ -117,9 +137,10 @@ void handleSetTime() {
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <meta http-equiv="refresh" content="2; url=/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Set Successfully</title>
+    <title>Uhrzeit erfolgreich gesetzt</title>
     <style>
         body { font-family: Arial; text-align: center; margin: 50px; background: #f0f0f0; }
         .success { background: #d4edda; color: #155724; padding: 20px; border-radius: 10px; display: inline-block; }
@@ -127,9 +148,9 @@ void handleSetTime() {
 </head>
 <body>
     <div class="success">
-        <h2>✅ Time Set Successfully!</h2>
-        <p>New time: )" + dateStr + " " + timeStr + R"(</p>
-        <p>Redirecting back...</p>
+        <h2>✅ Uhrzeit erfolgreich gesetzt!</h2>
+        <p>Neue Uhrzeit: )" + dateStr + " " + timeStr + R"(</p>
+        <p>Wird weitergeleitet...</p>
     </div>
 </body>
 </html>
@@ -137,32 +158,33 @@ void handleSetTime() {
     
     server.send(200, "text/html", response);
   } else {
-    server.send(400, "text/plain", "Missing date or time parameter");
+    server.send(400, "text/plain", "Fehlende Datums- oder Zeitangabe");
   }
 }
 
 void handleStatus() {
-  DateTime now = getCurrentTime();
   unsigned long remainingTime = (WEB_SERVER_TIMEOUT - (millis() - webServerStartTime)) / 1000;
-  
+
   String json = "{";
-  json += "\"current_time\": \"" + String(now.day()) + "." + String(now.month()) + "." + String(now.year()) + " " + String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second()) + "\",";
-  json += "\"remaining_seconds\": " + String(remainingTime) + ",";
-  json += "\"led_count\": " + String(NUM_LEDS) + ",";
-  json += "\"rtc_status\": \"active\",";
-  json += "\"wifi_ip\": \"" + WiFi.localIP().toString() + "\"";
+  json += "\"remaining_seconds\": " + String(remainingTime);
   json += "}";
-  
+
   server.send(200, "application/json", json);
 }
 
 void checkWebServerTimeout() {
-  if (webServerActive && (millis() - webServerStartTime) > WEB_SERVER_TIMEOUT) {
-    Serial.println("Web server timeout reached - shutting down to save power");
-    server.stop();
-    WiFi.disconnect();
-    WiFi.mode(WIFI_OFF);
-    webServerActive = false;
-    Serial.println("WiFi and web server stopped");
+  if (webServerActive) {
+    // Handle client requests
+    server.handleClient();
+
+    // Check for timeout
+    if ((millis() - webServerStartTime) > WEB_SERVER_TIMEOUT) {
+      Serial.println("Web server timeout reached - shutting down to save power");
+      server.stop();
+      WiFi.softAPdisconnect(true);
+      WiFi.mode(WIFI_OFF);
+      webServerActive = false;
+      Serial.println("WiFi and web server stopped");
+    }
   }
 }
