@@ -39,6 +39,9 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 ### Prerequisites
 
 - Arduino IDE 1.8.x or newer
+- **CP210x USB to UART Bridge Driver** - Required for Arduino IDE to detect the ESP32
+  - Download from [Silicon Labs](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
+  - Install the driver for your operating system before connecting the ESP32
 - ESP32 board package for Arduino IDE
 - Required libraries (install via Arduino Library Manager) with all needed dependencies:
   - "Adafruit_NeoPixel"
