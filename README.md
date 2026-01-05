@@ -6,7 +6,10 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 
 - Displays time in German words using 114 NeoPixel LEDs
 - Real-time clock with DS3231 RTC module for accurate timekeeping
-- Automatic German timezone adjustment (UTC+1/UTC+2 for summer time)
+- **Accurate German DST (Daylight Saving Time) handling**:
+  - Automatic calculation of last Sunday in March and October
+  - Precise 2:00 AM / 3:00 AM transition times
+  - UTC+1 for winter time, UTC+2 for summer time
 - Minute precision indicators with corner LEDs
 - **Web-based configuration interface** with mDNS support (http://wortuhr.local)
 - WiFi Access Point mode for easy setup

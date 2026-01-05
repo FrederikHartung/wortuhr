@@ -19,6 +19,21 @@ const unsigned long WEB_SERVER_TIMEOUT = 30 * 60 * 1000; // 30 minutes in millis
 int wintertimeAdjustSeconds = 1 * 60 * 60; //UTC +1 hour
 int summerTimeAdjustSeconds = 2 * 60 * 60; //UTC +2 hour
 
+// Calculate if current date/time is in summer time (DST) for Germany
+// Returns true if summer time is active, false otherwise
+bool isSummerTime(const DateTime& dt) {
+  // Calculate last Sunday in March (DST starts at 2:00 AM)
+  int startDay = (31 - (5 * dt.year() / 4 + 4) % 7);
+
+  // Calculate last Sunday in October (DST ends at 3:00 AM)
+  int endDay = (31 - (5 * dt.year() / 4 + 1) % 7);
+
+  DateTime startSummerTime(dt.year(), 3, startDay, 2, 0, 0);  // Last Sunday in March, 2:00 AM
+  DateTime endSummerTime(dt.year(), 10, endDay, 3, 0, 0);     // Last Sunday in October, 3:00 AM
+
+  return (dt >= startSummerTime && dt < endSummerTime);
+}
+
 void initializeClock() {
   Serial.begin(115200);
 
@@ -65,9 +80,8 @@ void setRTCTime(int year, int month, int day, int hour, int minute, int second) 
 
 DateTime getCurrentTime(){
   DateTime now = rtc.now();
-  int currentMonth = now.month();
 
-  if(currentMonth > 4 && currentMonth < 10){ //summertime in germany from april to november
+  if(isSummerTime(now)){
     return DateTime(now.unixtime() + summerTimeAdjustSeconds);
   }
   else{

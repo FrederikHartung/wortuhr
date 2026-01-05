@@ -16,6 +16,7 @@ void setLedOn(int position);
 void setLedOff(int position);
 void clearAllLEDs();
 void setRTCTime(int year, int month, int day, int hour, int minute, int second);
+bool isSummerTime(const DateTime& dt);
 DateTime getCurrentTime();
 void displayCurrentTime();
 void printDateTime(DateTime time);

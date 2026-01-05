@@ -27,7 +27,8 @@ The project is organized into multiple modules:
 - `displayCurrentTime()` - Primary time display logic with German word mapping (clock_core.cpp)
 - `setLed(number, r, g, b)` - Sets individual LED colors (note: parameter order is number, red, green, blue, but internally uses GRB format)
 - `getCurrentTime()` - Gets RTC time with German timezone adjustment (UTC+1/+2)
-- `startWebServer()` - Initializes web interface with 30-minute timeout
+- `isSummerTime(dt)` - Accurately calculates if a given DateTime is in DST (clock_core.cpp)
+- `startWebServer()` - Initializes web interface with 30-minute timeout and mDNS support
 - `checkForTimeUpdate()` - Serial interface for time setting via epoch seconds (utilities.cpp)
 
 ### LED Layout
@@ -81,7 +82,10 @@ Send "clear" via Serial to turn off all LEDs.
 
 ## Architecture Notes
 - Time display uses switch statements for 5-minute intervals (tm_min/5) and individual minutes (tm_min%5)
-- German timezone handling with automatic summer/winter time adjustment
+- German timezone handling with automatic summer/winter time adjustment:
+  - Accurate DST calculation using last Sunday of March (2:00 AM) and October (3:00 AM)
+  - `isSummerTime()` function correctly determines DST status for any date/time
+  - UTC+1 for winter time, UTC+2 for summer time
 - Web interface automatically starts on power-up and shuts down after 30 minutes
 - LED color order internally uses GRB but setLed function expects RGB parameters
 
