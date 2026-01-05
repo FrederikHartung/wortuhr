@@ -18,13 +18,13 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 
 ## Hardware Requirements
 
-- ESP32 microcontroller
+- ESP32 microcontroller (I used "Freenove ESP32 Wroover Dev Module")
 - 114x WS2812B NeoPixel LED strip
 - DS3231 RTC module with backup battery
 - 5V power supply (capacity depends on LED strip length and brightness)
 - Breadboard and jumper wires for prototyping
 
-### Wiring
+### Wiring (I am unsure if this is correct, because I finished the Hardware 3 Years ago and now write the Readme part)
 
 | Component | ESP32 Pin | Notes |
 |-----------|-----------|-------|
@@ -40,7 +40,7 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 
 - Arduino IDE 1.8.x or newer
 - ESP32 board package for Arduino IDE
-- Required libraries (install via Arduino Library Manager) with all needed Dependencies:
+- Required libraries (install via Arduino Library Manager) with all needed dependencies:
   - "Adafruit_NeoPixel"
   - "RTClib"
   - WiFi (included with ESP32 board package)
@@ -63,12 +63,12 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
    - Search and install "RTClib"
 
 4. Select your ESP32 board:
-   - Tools → Board → ESP32 Arduino → ESP32 Dev Module
+   - Tools → Board → Your ESP32 Board
 
 5. Configure upload settings:
-   - Tools → Upload Speed → 921600
-   - Tools → CPU Frequency → 240MHz (WiFi/BT)
-   - Tools → Flash Size → 4MB
+   - Tools → Upload Speed → 115200
+   - Tools → CPU Frequency → default is ok
+   - Tools → Flash Size → default is ok
 
 6. Connect your ESP32 and upload the code
 
@@ -139,7 +139,7 @@ The LEDs are arranged to form German time words. The layout includes:
 - **Partial lighting**: Check power supply capacity
 
 ### General Issues
-- **Upload fails**: Try different USB cable or lower upload speed
+- **Upload fails**: Try different USB cable (a data USB cable is required, not a charging one!) or lower upload speed
 - **Serial not working**: Ensure correct baud rate (115200)
 
 ## Development
@@ -166,7 +166,7 @@ The modular code structure makes it easy to modify:
 
 ### Testing Functions
 
-Several test functions are available:
+Several test functions are available to check if the wiring and soldering is ok:
 - `showEverySecondLed()`: Alternating LED test pattern
 - `showSpecificLed()`: Individual LED color test
 - `showRunningLights()`: Moving light animation
@@ -174,7 +174,7 @@ Several test functions are available:
 
 ## License
 
-This project is open source. See [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
