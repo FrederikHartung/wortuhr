@@ -1,9 +1,9 @@
 #include <Adafruit_NeoPixel.h>
 #include <RTClib.h>
 
-#define NUM_LEDS 114 //Count of LEDs
-#define DATA_PIN 23 //ID of the Pin for data transfer from ESP32 to NeoPixlel LED strip
-//#define DEBUG
+#define NUM_LEDS 114 // Count of LEDs
+#define DATA_PIN 23  // ID of the Pin for data transfer from ESP32 to NeoPixlel LED strip
+// #define DEBUG
 
 Adafruit_NeoPixel pixels(NUM_LEDS, DATA_PIN, NEO_RGB + NEO_KHZ800);
 RTC_DS3231 rtc;
@@ -11,36 +11,28 @@ int brightnessRed = 0;
 int brightnessGreen = 20;
 int brightnessBlue = 10;
 
-//#include <time.h>
-//const char *ntpServer = "pool.ntp.org";
-//const long gmtOffset_sec = 3600;
-//const int daylightOffset_sec = 3600;
-//#include <WiFi.h>
-//#include <WebServer.h>
-//WebServer server;
-//#include <AutoConnect.h>
-//AutoConnect portal(server);
-//AutoConnectConfig config;
-//bool UpdateChecked = false;
-
-void setLed(int number, int value_r, int value_g, int value_b){
+void setLed(int number, int value_r, int value_g, int value_b)
+{
   pixels.setPixelColor(number, pixels.Color(value_g, value_r, value_b, 0));
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
 
-  //Pixel
+  // Pixel
   pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
   pixels.clear();
   pixels.show();
 
-  //RTC
+  // RTC
   bool rtcInitSuccessful = rtc.begin();
-  if(rtcInitSuccessful){
+  if (rtcInitSuccessful)
+  {
     Serial.println("rtc init successful");
   }
-  else{
+  else
+  {
     Serial.println("rtc init not successful");
   }
 
@@ -49,32 +41,32 @@ void setup() {
     Serial.println("RTC lost power. Battery was removed or is empty.");
   }
 
-  //DateTime time = DateTime(2022, 12, 22, 19, 11, 0);
-  //rtc.adjust(time);
-  //Wifi
-    //Serial.println("server...");
-    // Responder of root page and apply page handled directly from WebServer class.
-    //server.on("/", []() {
-      //String content = R"(
-        //<meta name="viewport" content="width=device-width, initial-scale=1.0">
-        //<html>
-        //<body>
-        //<button onclick="window.location.href='http://wortuhr/_ac'">Wlan und Updates</button>
-        //</body>
-       // </html>
-      //)";
-     // server.send(200, "text/html", content);
-   // });
-  //Autoconnect configuration
-  //Serial.println("auto config...");
-  //config.ota = AC_OTA_BUILTIN;
-  //config.autoReconnect = true;
-  //config.title = "Wortuhr";
-  //config.apid = "Wortuhr";
-  //portal.config(config);
- // portal.begin();
-  //Serial.println("get time...");
-  //getTime();
+  // DateTime time = DateTime(2022, 12, 22, 19, 11, 0);
+  // rtc.adjust(time);
+  // Wifi
+  // Serial.println("server...");
+  //  Responder of root page and apply page handled directly from WebServer class.
+  // server.on("/", []() {
+  // String content = R"(
+  //<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  //<html>
+  //<body>
+  //<button onclick="window.location.href='http://wortuhr/_ac'">Wlan und Updates</button>
+  //</body>
+  // </html>
+  //)";
+  // server.send(200, "text/html", content);
+  // });
+  // Autoconnect configuration
+  // Serial.println("auto config...");
+  // config.ota = AC_OTA_BUILTIN;
+  // config.autoReconnect = true;
+  // config.title = "Wortuhr";
+  // config.apid = "Wortuhr";
+  // portal.config(config);
+  // portal.begin();
+  // Serial.println("get time...");
+  // getTime();
 }
 
 /*
@@ -108,14 +100,17 @@ void getTime()
 }
 */
 
+void showEverySecondLed()
+{
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
 
-void showEverySecondLed(){
-  for (int i = 0; i < NUM_LEDS; i++) {
-
-    if(i % 2 == 0){
+    if (i % 2 == 0)
+    {
       setLed(i, 100, 0, 0);
     }
-    else{
+    else
+    {
       setLed(i, 0, 0, 0);
     }
   }
@@ -123,11 +118,14 @@ void showEverySecondLed(){
   pixels.show();
   delay(500);
 
-  for (int i = 0; i < NUM_LEDS; i++) {
-   if(i % 2 == 0){
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    if (i % 2 == 0)
+    {
       setLed(i, 0, 0, 0);
     }
-   else{
+    else
+    {
       setLed(i, 100, 0, 0);
     }
   }
@@ -136,7 +134,8 @@ void showEverySecondLed(){
   delay(500);
 }
 
-void showSpecificLed(){
+void showSpecificLed()
+{
   setLed(0, 100, 0, 0);
   setLed(1, 0, 100, 0);
   setLed(2, 0, 0, 100);
@@ -153,93 +152,120 @@ void showSpecificLed(){
   delay(500);
 }
 
-
-
 int posi1 = 0;
 int posi2 = 1;
 int posi3 = 2;
 
-void showRunningLights(){
+void showRunningLights()
+{
   setLed(posi1, 50, 0, 0);
   setLed(posi2, 0, 50, 0);
   setLed(posi3, 0, 0, 50);
-  if(posi1 == 0){
-   setLed(NUM_LEDS - 1, 0, 0, 0);  
+  if (posi1 == 0)
+  {
+    setLed(NUM_LEDS - 1, 0, 0, 0);
   }
-  else{
-    setLed(posi1 - 1, 0, 0, 0); 
+  else
+  {
+    setLed(posi1 - 1, 0, 0, 0);
   }
 
   pixels.show();
 
   posi1++;
-  if(posi1 == NUM_LEDS){
+  if (posi1 == NUM_LEDS)
+  {
     posi1 = 0;
   }
 
   posi2++;
-  if(posi2 == NUM_LEDS){
+  if (posi2 == NUM_LEDS)
+  {
     posi2 = 0;
   }
 
   posi3++;
-  if(posi3 == NUM_LEDS){
+  if (posi3 == NUM_LEDS)
+  {
     posi3 = 0;
   }
 }
 
-void letAllShine(){
-  for(int i = 0; i < NUM_LEDS; i++){
-      setLed(i, 10, 10, 10);
+void letAllShine()
+{
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    setLed(i, 10, 10, 10);
   }
 
-    pixels.show();
+  pixels.show();
 }
 
-void checkForTimeUpdate(){
+void checkForTimeUpdate()
+{
   Serial.println("waiting for time input...");
-  if (Serial.available()) { // if there is data comming
+  if (Serial.available())
+  {                                              // if there is data comming
     String input = Serial.readStringUntil('\n'); // read string until newline character
-    //Dummy utc in epoch seconds time: 1672670580
+    // Dummy utc in epoch seconds time: 1672670580
 
-    if(input.equals("clear")){
-        pixels.clear();
+    if (input.equals("clear"))
+    {
+      pixels.clear();
     }
-    else if(input.length() == 10){
+    else if (input.length() == 10)
+    {
       Serial.println("trying to adjust the rtc time to new value");
       rtc.adjust(DateTime(input.toInt()));
       pixels.clear();
     }
-    else{ //set imput as epoch seconds string
-    Serial.println("unknown what to do with input: " + input);
+    else
+    { // set imput as epoch seconds string
+      Serial.println("unknown what to do with input: " + input);
     }
   }
 }
 
-int wintertimeAdjustSeconds = 1 * 60 * 60; //UTC +1 hour
-int summerTimeAdjustSeconds = 2 * 60 * 60; //UTC +2 hour
+int wintertimeAdjustSeconds = 1 * 60 * 60; // UTC +1 hour
+int summerTimeAdjustSeconds = 2 * 60 * 60; // UTC +2 hour
 
-DateTime getCurrentTime(){
-  DateTime now = rtc.now();
-  int currentMonth = now.month();
+bool isGermanDST(const DateTime &utc)
+{
+  int y = utc.year();
 
-  if(currentMonth > 4 && currentMonth < 10){ //summertime in germany from april to november
-    return DateTime(now.unixtime() + summerTimeAdjustSeconds);
-  }
-  else{
-    return DateTime(now.unixtime() + wintertimeAdjustSeconds);
-  }
+  // EU/Germany DST start: last Sunday in March at 01:00 UTC
+  DateTime march31(y, 3, 31, 1, 0, 0);
+  int lastSundayMarch = 31 - march31.dayOfTheWeek();
+  DateTime dstStart(y, 3, lastSundayMarch, 1, 0, 0);
+
+  // EU/Germany DST end: last Sunday in October at 01:00 UTC
+  DateTime october31(y, 10, 31, 1, 0, 0);
+  int lastSundayOctober = 31 - october31.dayOfTheWeek();
+  DateTime dstEnd(y, 10, lastSundayOctober, 1, 0, 0);
+
+  uint32_t t = utc.unixtime();
+  return t >= dstStart.unixtime() && t < dstEnd.unixtime();
 }
 
-void setLedOff(int position){
-  setLed(position, 0, 0, 0); 
+DateTime getCurrentTime()
+{
+  DateTime utc = rtc.now();
+  int offset = isGermanDST(utc) ? summerTimeAdjustSeconds : wintertimeAdjustSeconds;
+  return DateTime(utc.unixtime() + offset);
 }
 
-void setLedOn(int position){
-  setLed(position, brightnessRed, brightnessGreen, brightnessBlue); 
+void setLedOff(int position)
+{
+  setLed(position, 0, 0, 0);
 }
 
-void printDateTime(DateTime time){
+void setLedOn(int position)
+{
+  setLed(position, brightnessRed, brightnessGreen, brightnessBlue);
+}
+
+void printDateTime(DateTime time)
+{
   Serial.println("time:" + String(time.day()) + "-" + String(time.month()) + "-" + String(time.year()) + " " + String(time.hour()) + "h:" + String(time.minute()) + "m:" + String(time.second()) + "s");
 }
 
@@ -249,14 +275,14 @@ void displayCurrentTime()
 
   int tm_min = now.minute();
   int tm_hour = now.hour();
-  
+
   switch (tm_min % 5)
   { // Punkte min
 
   case 0:
-    #if defined(DEBUG)
-      Serial.println("0 minutes");
-    #endif
+#if defined(DEBUG)
+    Serial.println("0 minutes");
+#endif
 
     setLedOff(110);
     setLedOff(111);
@@ -266,26 +292,26 @@ void displayCurrentTime()
     break;
 
   case 1:
-    #if defined(DEBUG)
-      Serial.println("1 minutes");
-    #endif
+#if defined(DEBUG)
+    Serial.println("1 minutes");
+#endif
 
     setLedOn(110);
     break;
 
   case 2:
-    #if defined(DEBUG)
-      Serial.println("2 minutes");
-    #endif
+#if defined(DEBUG)
+    Serial.println("2 minutes");
+#endif
 
     setLedOn(110);
     setLedOn(111);
     break;
 
   case 3:
-    #if defined(DEBUG)
-      Serial.println("3 minutes");
-    #endif
+#if defined(DEBUG)
+    Serial.println("3 minutes");
+#endif
 
     setLedOn(110);
     setLedOn(111);
@@ -293,9 +319,9 @@ void displayCurrentTime()
     break;
 
   case 4:
-    #if defined(DEBUG)
-      Serial.println("4 minutes");
-    #endif
+#if defined(DEBUG)
+    Serial.println("4 minutes");
+#endif
 
     setLedOn(110);
     setLedOn(111);
@@ -305,7 +331,7 @@ void displayCurrentTime()
 
   default:
     setLedOn(2);
-    //get time
+    // get time
     break;
   }
 
@@ -313,347 +339,345 @@ void displayCurrentTime()
   {
 
   case 0:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 0");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 0");
+#endif
 
-    for (int i = 106; i < 110; i++) //done
-    { //Fünf
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOff(i);
     }
 
-    for (int i = 74; i < 77; i++) //done
-    { //Vor
+    for (int i = 74; i < 77; i++) // done
+    {                             // Vor
       setLedOff(i);
     }
 
-    for (int i = 0; i < 3; i++) //done
-    { //Uhr
+    for (int i = 0; i < 3; i++) // done
+    {                           // Uhr
       setLedOn(i);
     }
 
     break;
 
   case 1:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 1");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 1");
+#endif
 
-    for (int i = 0; i < 3; i++) //done
-    { //Uhr
+    for (int i = 0; i < 3; i++) // done
+    {                           // Uhr
       setLedOff(i);
     }
 
-    for (int i = 106; i < 110; i++) //done
-    { //Fünf
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOn(i);
     }
 
-    for (int i = 66; i < 70; i++) //done 
-    { //Nach
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
       setLedOn(i);
     }
     break;
   case 2:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 2");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 2");
+#endif
 
-    for (int i = 106; i < 110; i++)//done
-    { //Fünf
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOff(i);
     }
-    for (int i = 66; i < 70; i++) //done 
-    { //Nach
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
       setLedOff(i);
     }
 
-    for (int i = 95; i < 99; i++) //done
-    { // Zehn
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOn(i);
     }
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
       setLedOn(i);
     }
     break;
 
   case 3:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 3");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 3");
+#endif
 
-    for (int i = 95; i < 99; i++) //done
-    { // Zehn
-      setLedOff(i);
-    }
-        
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOff(i);
     }
 
-    for (int i = 81; i < 88; i++) //done
-    { //Viertel
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
+      setLedOff(i);
+    }
+
+    for (int i = 81; i < 88; i++) // done
+    {                             // Viertel
       setLedOn(i);
     }
 
     break;
 
   case 4:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 4");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 4");
+#endif
 
-    for (int i = 81; i < 88; i++) //done
-    { //Viertel
+    for (int i = 81; i < 88; i++) // done
+    {                             // Viertel
       setLedOff(i);
     }
 
-    for (int i = 95; i < 99; i++) //done
-    { // Zehn
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOn(i);
     }
 
-        for (int i = 74; i < 77; i++) //done
-    { // Vor
+    for (int i = 74; i < 77; i++) // done
+    {                             // Vor
       setLedOn(i);
     }
 
-    for (int i = 55; i < 59; i++) //done
-    { //Halb
+    for (int i = 55; i < 59; i++) // done
+    {                             // Halb
       setLedOn(i);
     }
 
-/*
-    for (int i = 88; i < 95; i++) //done
-    { //Zwanzig
-      setLedOn(i);
-    }
+    /*
+        for (int i = 88; i < 95; i++) //done
+        { //Zwanzig
+          setLedOn(i);
+        }
 
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
-      setLedOn(i);
-    }
-*/
+        for (int i = 66; i < 70; i++) //done
+        { //Nach
+          setLedOn(i);
+        }
+    */
     break;
 
   case 5:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 5");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 5");
+#endif
 
-/*
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
+    /*
+        for (int i = 66; i < 70; i++) //done
+        { //Nach
+          setLedOff(i);
+        }
+
+        for (int i = 88; i < 95; i++) //done
+        { //Zwanzig
+          setLedOff(i);
+        }
+    */
+
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOff(i);
     }
 
-    for (int i = 88; i < 95; i++) //done
-    { //Zwanzig
-      setLedOff(i);
-    }
-*/
-
-    for (int i = 95; i < 99; i++) //done
-    { // Zehn
+    for (int i = 74; i < 77; i++) // done
+    {                             // Vor
       setLedOff(i);
     }
 
-        for (int i = 74; i < 77; i++) //done
-    { // Vor
+    for (int i = 55; i < 59; i++) // done
+    {                             // Halb
       setLedOff(i);
     }
 
-    for (int i = 55; i < 59; i++) //done
-    { //Halb
-      setLedOff(i);
-    }
-
-    for (int i = 106; i < 110; i++) //done
-    { //Fünf
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOn(i);
     }
-    for (int i = 74; i < 77; i++) //done
-    { // Vor
+    for (int i = 74; i < 77; i++) // done
+    {                             // Vor
       setLedOn(i);
     }
-    for (int i = 55; i < 59; i++) //done
-    { //Halb
+    for (int i = 55; i < 59; i++) // done
+    {                             // Halb
       setLedOn(i);
     }
     break;
 
   case 6:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 6");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 6");
+#endif
 
-    for (int i = 106; i < 110; i++) //done
-    { //Fünf
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOff(i);
     }
-    for (int i = 74; i < 77; i++) //done
-    { // Vor
+    for (int i = 74; i < 77; i++) // done
+    {                             // Vor
       setLedOff(i);
     }
 
-    for (int i = 55; i < 59; i++) //done
-    { //Halb
+    for (int i = 55; i < 59; i++) // done
+    {                             // Halb
       setLedOn(i);
     }
     break;
   case 7:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 7");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 7");
+#endif
 
-    for (int i = 106; i < 110; i++) //done
-    { //Fünf
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOn(i);
     }
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
       setLedOn(i);
     }
 
-
-
-    for (int i = 55; i < 59; i++) //done
-    { //Halb
+    for (int i = 55; i < 59; i++) // done
+    {                             // Halb
       setLedOn(i);
     }
 
     break;
 
   case 8:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 8");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 8");
+#endif
 
-/*
-    for (int i = 88; i < 95; i++)
-    { //Zwanzig
-      setLedOn(i);
-    }
-      for (int i = 74; i < 77; i++) //done
-    { // Vor
-      setLedOn(i);
-    }
-    */
-    for (int i = 106; i < 110; i++) //done
-    { //Fünf
+    /*
+        for (int i = 88; i < 95; i++)
+        { //Zwanzig
+          setLedOn(i);
+        }
+          for (int i = 74; i < 77; i++) //done
+        { // Vor
+          setLedOn(i);
+        }
+        */
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOff(i);
     }
-    for (int i = 66; i < 70; i++) //done
-    { //Nach
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
       setLedOff(i);
     }
 
-    for (int i = 95; i < 99; i++) //done
-    { // Zehn
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOn(i);
     }
-      for (int i = 66; i < 70; i++) //done 
-    { //Nach
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
       setLedOn(i);
     }
-    for (int i = 55; i < 59; i++) //done
-    { //Halb
+    for (int i = 55; i < 59; i++) // done
+    {                             // Halb
       setLedOn(i);
     }
 
     break;
 
   case 9:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 9");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 9");
+#endif
 
-/*
-    for (int i = 88; i < 95; i++) //done
-    { //Zwanzig
-      setLedOff(i);
-    }
-    for (int i = 81; i < 88; i++) //done
-    { //Viertel
-      setLedOn(i);
-    }
-    for (int i = 74; i < 77; i++) //done
-    { // Vor
-      setLedOn(i);
-    }
-    */
+    /*
+        for (int i = 88; i < 95; i++) //done
+        { //Zwanzig
+          setLedOff(i);
+        }
+        for (int i = 81; i < 88; i++) //done
+        { //Viertel
+          setLedOn(i);
+        }
+        for (int i = 74; i < 77; i++) //done
+        { // Vor
+          setLedOn(i);
+        }
+        */
 
-    for (int i = 95; i < 99; i++) //done
-    { // Zehn
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOff(i);
     }
-      for (int i = 66; i < 70; i++) //done 
-    { //Nach
+    for (int i = 66; i < 70; i++) // done
+    {                             // Nach
       setLedOff(i);
     }
-    for (int i = 55; i < 59; i++) //done
-    { //Halb
+    for (int i = 55; i < 59; i++) // done
+    {                             // Halb
       setLedOff(i);
     }
 
-    for (int i = 77; i < 88; i++) //done
-    { //Dreiviertel
+    for (int i = 77; i < 88; i++) // done
+    {                             // Dreiviertel
       setLedOn(i);
     }
     break;
 
   case 10:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 10");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 10");
+#endif
 
-/*
-    for (int i = 81; i < 88; i++) //done
-    { //Viertel
+    /*
+        for (int i = 81; i < 88; i++) //done
+        { //Viertel
+          setLedOff(i);
+        }
+    */
+
+    for (int i = 77; i < 88; i++) // done
+    {                             // Dreiviertel
       setLedOff(i);
     }
-*/
 
-    for (int i = 77; i < 88; i++) //done
-    { //Dreiviertel
-      setLedOff(i);
-    }
-
-    for (int i = 95; i < 99; i++) //done
-    { //Zehn
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOn(i);
     }
-    for (int i = 74; i < 77; i++) //done
-    { // Vor
+    for (int i = 74; i < 77; i++) // done
+    {                             // Vor
       setLedOn(i);
     }
     break;
 
   case 11:
-    #if defined(DEBUG)
-      Serial.println("tm_min / 5 = 11");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min / 5 = 11");
+#endif
 
-    for (int i = 106; i < 110; i++) //done
-    { //Fünf
+    for (int i = 106; i < 110; i++) // done
+    {                               // Fünf
       setLedOn(i);
     }
 
-    for (int i = 95; i < 99; i++) //done
-    { //Zehn
+    for (int i = 95; i < 99; i++) // done
+    {                             // Zehn
       setLedOff(i);
     }
-    for (int i = 74; i < 77; i++) //done
-    { // Vor
+    for (int i = 74; i < 77; i++) // done
+    {                             // Vor
       setLedOn(i);
     }
 
     break;
 
   default:
-      setLedOn(2);
+    setLedOn(2);
     break;
   }
 
@@ -661,26 +685,26 @@ void displayCurrentTime()
   {
     tm_hour = tm_hour - 12;
   }
-  
+
   if (tm_min > 14) //??
   {
-    #if defined(DEBUG)
-      Serial.println("tm_min > 14 = true");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_min > 14 = true");
+#endif
 
     if (tm_hour == 12)
     {
-    #if defined(DEBUG)
+#if defined(DEBUG)
       Serial.println("tm_hour == 12");
-    #endif
+#endif
 
       tm_hour = 1;
     }
     else
     {
-    #if defined(DEBUG)
+#if defined(DEBUG)
       Serial.println("tm_hour != 12");
-    #endif
+#endif
       tm_hour = tm_hour + 1;
     }
   }
@@ -688,186 +712,186 @@ void displayCurrentTime()
   switch (tm_hour)
   {
   case 1:
-    #if defined(DEBUG)
-      Serial.println("tm_hour = 1");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_hour = 1");
+#endif
 
-    for (int i = 17; i < 22; i++) //done
-    { //Zwölf
+    for (int i = 17; i < 22; i++) // done
+    {                             // Zwölf
       setLedOff(i);
     }
-    for (int i = 52; i < 55; i++) //done
-    { //Ein
+    for (int i = 52; i < 55; i++) // done
+    {                             // Ein
       setLedOn(i);
     }
     if (tm_min > 4)
-    { //s for Eins
+    { // s for Eins
       setLedOn(51);
     }
 
     break;
   case 2:
-    #if defined(DEBUG)
-      Serial.println("tm_hour = 2");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_hour = 2");
+#endif
 
-    for (int i = 51; i < 55; i++) //done
-    { //Eins
+    for (int i = 51; i < 55; i++) // done
+    {                             // Eins
       setLedOff(i);
     }
     for (int i = 44; i < 48; i++)
-    { //Zwei
+    { // Zwei
       setLedOn(i);
     }
     break;
   case 3:
-    #if defined(DEBUG)
-      Serial.println("tm_hour = 3");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_hour = 3");
+#endif
 
     for (int i = 44; i < 48; i++)
-    { //Zwei
+    { // Zwei
       setLedOff(i);
     }
     for (int i = 33; i < 37; i++)
-    { //Drei
+    { // Drei
       setLedOn(i);
     }
     break;
   case 4:
     for (int i = 33; i < 37; i++)
-    { //Drei
+    { // Drei
       setLedOff(i);
     }
     for (int i = 40; i < 44; i++)
-    { //Vier
+    { // Vier
       setLedOn(i);
     }
     break;
   case 5:
     for (int i = 40; i < 44; i++)
-    { //Vier
+    { // Vier
       setLedOff(i);
     }
     for (int i = 62; i < 66; i++)
-    { //Fünf
+    { // Fünf
       setLedOn(i);
     }
     break;
   case 6:
     for (int i = 62; i < 66; i++)
-    { //Fünf
+    { // Fünf
       setLedOff(i);
     }
     for (int i = 28; i < 33; i++)
-    { //Sechs
+    { // Sechs
       setLedOn(i);
     }
     break;
   case 7:
     for (int i = 28; i < 33; i++)
-    { //Sechs
+    { // Sechs
       setLedOff(i);
     }
     for (int i = 11; i < 17; i++)
-    { //Sieben
+    { // Sieben
       setLedOn(i);
     }
     break;
   case 8:
 
     for (int i = 11; i < 17; i++)
-    { //Sieben
+    { // Sieben
       setLedOff(i);
     }
     for (int i = 22; i < 26; i++)
-    { //Acht
+    { // Acht
       setLedOn(i);
     }
     break;
   case 9:
     for (int i = 22; i < 26; i++)
-    { //Acht
+    { // Acht
       setLedOff(i);
     }
     for (int i = 4; i < 8; i++)
-    { //Neun
+    { // Neun
       setLedOn(i);
     }
     break;
   case 10:
     for (int i = 4; i < 8; i++)
-    { //Neun
+    { // Neun
       setLedOff(i);
     }
     for (int i = 7; i < 11; i++)
-    { //Zehn
+    { // Zehn
       setLedOn(i);
     }
     break;
   case 11:
     for (int i = 7; i < 11; i++)
-    { //Zehn
+    { // Zehn
       setLedOff(i);
     }
     for (int i = 60; i < 63; i++)
-    { //Elf
+    { // Elf
       setLedOn(i);
     }
     break;
   case 12:
-    #if defined(DEBUG)
-      Serial.println("tm_hour = 12");
-    #endif
+#if defined(DEBUG)
+    Serial.println("tm_hour = 12");
+#endif
 
     for (int i = 60; i < 63; i++)
-    { //Elf
+    { // Elf
       setLedOff(i);
     }
-    for (int i = 17; i < 22; i++) //done
-    { //Zwölf
+    for (int i = 17; i < 22; i++) // done
+    {                             // Zwölf
       setLedOn(i);
     }
     break;
   }
 
-  setLedOn(99); //E
-  setLedOn(100); //S
-  setLedOn(102); //I
-  setLedOn(103); //S
-  setLedOn(104); //T  
-  
-  pixels.show();   // Send the updated pixel colors to the hardware.
+  setLedOn(99);  // E
+  setLedOn(100); // S
+  setLedOn(102); // I
+  setLedOn(103); // S
+  setLedOn(104); // T
+
+  pixels.show(); // Send the updated pixel colors to the hardware.
 }
 
-void testCornerLeds(){
-setLed(113, 10, 0, 0); 
-  setLed(112, 10, 0, 0); 
-  setLed(111, 10, 0, 0); 
-  setLed(110, 10, 0, 0); 
+void testCornerLeds()
+{
+  setLed(113, 10, 0, 0);
+  setLed(112, 10, 0, 0);
+  setLed(111, 10, 0, 0);
+  setLed(110, 10, 0, 0);
   pixels.show();
-  delay(5000); //sleep 10 sec
-  setLed(113, 0, 10, 0); 
-  setLed(112, 0, 10, 0); 
-  setLed(111, 0, 10, 0); 
-  setLed(110, 0, 10, 0); 
+  delay(5000); // sleep 10 sec
+  setLed(113, 0, 10, 0);
+  setLed(112, 0, 10, 0);
+  setLed(111, 0, 10, 0);
+  setLed(110, 0, 10, 0);
   pixels.show();
-  delay(5000); //sleep 10 sec
-  setLed(113, 0, 0, 10); 
-  setLed(112, 0, 0, 10); 
-  setLed(111, 0, 0, 10); 
-  setLed(110, 0, 0, 10); 
+  delay(5000); // sleep 10 sec
+  setLed(113, 0, 0, 10);
+  setLed(112, 0, 0, 10);
+  setLed(111, 0, 0, 10);
+  setLed(110, 0, 0, 10);
   pixels.show();
-  delay(5000); //sleep 10 sec
+  delay(5000); // sleep 10 sec
 }
 
-
-void loop() {
+void loop()
+{
   checkForTimeUpdate();
   printDateTime(getCurrentTime());
-  //letAllShine();
-  displayCurrentTime(); 
+  // letAllShine();
+  displayCurrentTime();
   delay(5000);
   Serial.println("-----------------");
 }
-
