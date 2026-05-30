@@ -1,0 +1,12 @@
+1. Den Stromstecker der Wortuhr ziehen und 10 Sekunden warten.
+2. Den Stromstecker wieder in die Steckdose stecken.
+3. Die Uhr startet nach dem Neustart automatisch ein temporäres WLAN mit dem Namen "Saskia".
+4. Mit dem WLAN "Saskia" verbinden. Das Passwort lautet "wortuhr2026".
+5. Mit Google Chrome oder einem anderen Browser die Webseite "http://wortuhr.local" öffnen.
+   Falls diese Adresse nicht funktioniert, stattdessen "http://192.168.4.1" öffnen.
+   Die Webseite ist nur erreichbar, wenn man mit dem WLAN "Saskia" verbunden ist.
+6. Auf der Webseite die aktuelle Uhrzeit mit den Plus- und Minus-Tasten einstellen.
+   Bei manchen Handys wird dabei eine Warnung angezeigt, dass die Verbindung nicht sicher oder unverschlüsselt ist.
+   Diese Warnung kann ignoriert werden.
+7. Wenn die aktuelle Uhrzeit eingestellt ist und korrekt auf der Uhr angezeigt wird, wieder zum ursprünglichen WLAN wechseln.
+8. 30 Minuten nach dem Neustart schaltet die Wortuhr das WLAN automatisch aus, um Strom zu sparen.
