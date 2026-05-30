@@ -1,30 +1,29 @@
 # German Word Clock (Wortuhr)
 
-A beautiful word clock that displays time in German using a NeoPixel LED strip. Instead of showing numbers, it illuminates words to spell out the current time, like "ES IST ZEHN VOR HALB DREI" (It is ten to half past two).
+A German word clock for an ESP32, a DS3231 real-time clock module, and a 114 LED NeoPixel strip. Instead of showing numbers, it illuminates words to spell out the current time, for example "ES IST ZEHN VOR HALB DREI".
 
 ## Features
 
-- Displays time in German words using 114 NeoPixel LEDs
-- Real-time clock with DS3231 RTC module for accurate timekeeping
-- **Accurate German DST (Daylight Saving Time) handling**:
-  - Automatic calculation of last Sunday in March and October
-  - Precise 2:00 AM / 3:00 AM transition times
-  - UTC+1 for winter time, UTC+2 for summer time
-- Minute precision indicators with corner LEDs
-- **Web-based configuration interface** with mDNS support (http://wortuhr.local)
-- WiFi Access Point mode for easy setup
-- Serial interface for time setting (alternative)
-- Customizable LED brightness and colors
+- Displays the time in German words using 114 NeoPixel LEDs
+- Uses a DS3231 RTC module for timekeeping
+- Handles German summer/winter time automatically
+- Keeps the RTC internally in UTC and converts to German local time for display
+- Shows extra minutes with four corner LEDs
+- Starts a setup WiFi access point for 30 minutes after boot
+- Hosts a small web interface at `http://wortuhr.local` or `http://192.168.4.1`
+- Allows changing hour, minute, and second with plus/minus controls
+- Supports serial time setting as an alternative
+- Keeps all Arduino code in one `.ino` file for Arduino IDE compatibility
 
 ## Hardware Requirements
 
-- ESP32 microcontroller (I used "Freenove ESP32 Wroover Dev Module")
-- 114x WS2812B NeoPixel LED strip
+- ESP32 microcontroller, currently used with a Freenove ESP32 Wrover/Wroover style dev module
+- 114x WS2812B / NeoPixel compatible LEDs
 - DS3231 RTC module with backup battery
-- 5V power supply (capacity depends on LED strip length and brightness)
-- Breadboard and jumper wires for prototyping
+- 5V power supply sized for the LED strip
+- Wiring/prototyping material
 
-### Wiring (I am unsure if this is correct, because I finished the Hardware 3 Years ago and now write the Readme part)
+### Wiring
 
 | Component | ESP32 Pin | Notes |
 |-----------|-----------|-------|
@@ -32,164 +31,159 @@ A beautiful word clock that displays time in German using a NeoPixel LED strip. 
 | DS3231 SDA | GPIO 21 | I2C data line |
 | DS3231 SCL | GPIO 22 | I2C clock line |
 | DS3231 VCC | 3.3V | RTC power |
-| NeoPixel VCC | 5V | External power recommended for full strip |
+| NeoPixel VCC | 5V | External power recommended |
 
 ## Software Setup
 
 ### Prerequisites
 
-- Arduino IDE 1.8.x or newer
-- **CP210x USB to UART Bridge Driver** - Required for Arduino IDE to detect the ESP32
-  - Download from [Silicon Labs](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
-  - Install the driver for your operating system before connecting the ESP32
+- Arduino IDE
 - ESP32 board package for Arduino IDE
-- Required libraries (install via Arduino Library Manager) with all needed dependencies:
-  - "Adafruit_NeoPixel"
-  - "RTClib"
-  - WiFi (included with ESP32 board package)
-  - WebServer (included with ESP32 board package)
-  - ESPmDNS (included with ESP32 board package)
+- Required libraries:
+  - `Adafruit_NeoPixel`
+  - `RTClib`
+- ESP32 built-in libraries:
+  - `WiFi`
+  - `WebServer`
+  - `ESPmDNS`
 
 ### Installation
 
 1. Clone this repository:
+
    ```bash
    git clone https://github.com/FrederikHartung/wortuhr.git
    cd wortuhr
    ```
 
-2. Open `Wortuhr.ino` in Arduino IDE
+2. Open `LED_Test/LED_Test.ino` in Arduino IDE.
 
-3. Install required libraries:
-   - Go to Tools → Manage Libraries
-   - Search and install "Adafruit NeoPixel"
-   - Search and install "RTClib"
+3. Install the required libraries via Arduino Library Manager:
+   - Search and install `Adafruit NeoPixel`
+   - Search and install `RTClib`
 
-4. Select your ESP32 board:
-   - Tools → Board → Your ESP32 Board
+4. Select your ESP32 board in Arduino IDE.
 
-5. Configure upload settings:
-   - Tools → Upload Speed → 115200
-   - Tools → CPU Frequency → default is ok
-   - Tools → Flash Size → default is ok
-
-6. Connect your ESP32 and upload the code
+5. Upload the sketch to the ESP32.
 
 ## Usage
 
-### First Setup
+### Web Interface
 
-#### Option 1: Web Interface (Recommended)
+After every ESP32 restart, the setup WiFi starts automatically for 30 minutes.
 
-1. **Power on the device**: The WiFi access point starts automatically
-2. **Connect to WiFi**:
-   - Network name: "Wortuhr"
-   - Password: "wortuhr123"
-3. **Open web browser**: Navigate to http://wortuhr.local or http://192.168.4.1
-4. **Set the time**: Use the date and time picker to set the current time
-5. **Auto-shutdown**: The web server automatically shuts down after 30 minutes to save power
+Connect to:
 
-#### Option 2: Serial Interface
+- Network name: `Saskia`
+- Password: `wortuhr2026`
 
-1. **Set the time**: Open Serial Monitor (115200 baud) and send a 10-digit epoch timestamp to set the RTC time. You can get the current epoch time from [epochconverter.com](https://epochconverter.com).
+Then open:
 
-2. **Test the display**: The clock will automatically start displaying the current time in German words.
+- `http://wortuhr.local`
+- or `http://192.168.4.1`
 
-### Serial Commands
+The page shows the current internal clock time and provides plus/minus controls for:
 
-- Send a 10-digit epoch timestamp to update the RTC time
-- Send `"clear"` to turn off all LEDs
+- Hour
+- Minute
+- Second
 
-### Time Display Examples
+Each click immediately writes the adjusted time to the RTC. The web server, mDNS, and WiFi access point shut down automatically after 30 minutes.
 
-- 14:00 → "ES IST ZWEI UHR"
-- 14:05 → "ES IST FÜNF NACH ZWEI" 
-- 14:15 → "ES IST VIERTEL NACH ZWEI"
-- 14:30 → "ES IST HALB DREI"
-- 14:45 → "ES IST DREIVIERTEL DREI"
+### Serial Interface
+
+Open Serial Monitor with `115200` baud.
+
+Supported commands:
+
+- Send a 10-digit UTC epoch timestamp to update the RTC directly.
+- Send `clear` to clear the LEDs.
+
+Important: the RTC is treated as UTC internally. The web interface converts German local time back to UTC before storing it.
+
+## Time Handling
+
+The sketch reads the DS3231 RTC as UTC. `getCurrentTime()` converts that UTC time into German local time:
+
+- Winter time: UTC+1
+- Summer time: UTC+2
+
+Summer time is detected using the EU/Germany transition rules:
+
+- Starts on the last Sunday in March at 01:00 UTC
+- Ends on the last Sunday in October at 01:00 UTC
+
+## Time Display Examples
+
+- 14:00 -> "ES IST ZWEI UHR"
+- 14:05 -> "ES IST FUENF NACH ZWEI"
+- 14:15 -> "ES IST VIERTEL NACH ZWEI"
+- 14:30 -> "ES IST HALB DREI"
+- 14:45 -> "ES IST DREIVIERTEL DREI"
 
 ## Configuration
 
-### LED Settings
+The project is currently intentionally kept as one Arduino sketch:
+
+- `LED_Test/LED_Test.ino`
+
+Relevant settings are near the top of the file:
+
 ```cpp
-#define NUM_LEDS 114        // Total number of LEDs
-#define DATA_PIN 23         // GPIO pin for LED data
-int brightnessRed = 0;      // Red brightness (0-255)
-int brightnessGreen = 20;   // Green brightness (0-255)  
-int brightnessBlue = 10;    // Blue brightness (0-255)
+#define NUM_LEDS 114
+#define DATA_PIN 23
+
+const char *setupWifiSsid = "Saskia";
+const char *setupWifiPassword = "wortuhr2026";
+const char *mdnsHostname = "wortuhr";
+const unsigned long setupWifiTimeoutMs = 30UL * 60UL * 1000UL;
+
+int brightnessRed = 0;
+int brightnessGreen = 20;
+int brightnessBlue = 10;
 ```
 
-### Debug Mode
-Uncomment `#define DEBUG` to enable detailed serial output for troubleshooting.
+Uncomment `#define DEBUG` to enable additional serial output.
 
 ## LED Layout
 
 The LEDs are arranged to form German time words. The layout includes:
 
-- Main time words (EINS, ZWEI, DREI, etc.)
-- Time indicators (UHR, VOR, NACH, HALB, VIERTEL)
-- Minute precision dots (corner LEDs 110-113)
+- Main time words such as `EINS`, `ZWEI`, `DREI`
+- Time indicators such as `UHR`, `VOR`, `NACH`, `HALB`, `VIERTEL`
+- Corner LEDs `110-113` for minutes within each 5-minute interval
+
+## Test Functions
+
+The sketch still contains helper functions for hardware checks:
+
+- `showEverySecondLed()`
+- `showSpecificLed()`
+- `showRunningLights()`
+- `letAllShine()`
+- `testCornerLeds()`
+
+They are not called by default in `loop()`.
 
 ## Troubleshooting
 
-### RTC Issues
-- **"RTC lost power"**: Replace the backup battery (CR2032)
-- **Incorrect time**: Send a new epoch timestamp via serial
+### WiFi/Web Interface
 
-### LED Issues
-- **No LEDs lighting**: Check power supply and data pin connection
-- **Wrong colors**: Verify wiring and LED strip type (WS2812B)
-- **Partial lighting**: Check power supply capacity
+- If `wortuhr.local` does not open, try `http://192.168.4.1`.
+- If no setup WiFi appears, restart the ESP32 and check within the first 30 minutes.
+- If the page opens but time changes look wrong, check that the RTC was not manually set to local time via serial.
 
-### General Issues
-- **Upload fails**: Try different USB cable (a data USB cable is required, not a charging one!) or lower upload speed
-- **Serial not working**: Ensure correct baud rate (115200)
+### RTC
 
-## Development
+- If Serial Monitor prints `RTC lost power`, check or replace the RTC backup battery.
+- If the displayed time is wrong, use the web interface or send a UTC epoch timestamp via serial.
 
-### Code Structure
+### LEDs
 
-The project is organized into multiple modules:
-
-- **Wortuhr.ino** - Main program entry point
-- **config.h** - Hardware and configuration constants
-- **clock_core.h/cpp** - Core timekeeping and LED display logic
-- **web_interface.h/cpp** - Web server for time configuration
-- **led_tests.h/cpp** - LED testing functions (optional)
-- **utilities.h/cpp** - Utility functions (serial interface, etc.)
-
-### Adding Features
-
-The modular code structure makes it easy to modify:
-
-- **Change LED layout**: Modify the LED number ranges in `clock_core.cpp`
-- **Add animations**: Create new functions and call them in `loop()`
-- **Web interface customization**: Edit `web_interface.cpp` for UI changes
-- **WiFi settings**: Update credentials in `web_interface.h` or `config.h`
-
-### Testing Functions
-
-Several test functions are available to check if the wiring and soldering is ok:
-- `showEverySecondLed()`: Alternating LED test pattern
-- `showSpecificLed()`: Individual LED color test
-- `showRunningLights()`: Moving light animation
-- `testCornerLeds()`: Corner LED functionality test
+- If no LEDs light up, check power, ground, and GPIO 23 data wiring.
+- If colors are wrong, verify the LED strip type and color order.
+- If only part of the strip works, check solder joints and power capacity.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Test your changes thoroughly
-4. Submit a pull request with a clear description
-
-## Support
-
-For questions or issues:
-- Open a GitHub issue
-- Check the serial monitor for debug information
-- Verify hardware connections
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
