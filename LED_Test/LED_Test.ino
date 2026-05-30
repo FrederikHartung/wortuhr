@@ -1,19 +1,232 @@
 #include <Adafruit_NeoPixel.h>
 #include <RTClib.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
 
 #define NUM_LEDS 114 // Count of LEDs
 #define DATA_PIN 23  // ID of the Pin for data transfer from ESP32 to NeoPixlel LED strip
 // #define DEBUG
 
+const char *setupWifiSsid = "Saskia";
+const char *setupWifiPassword = "wortuhr2026";
+const char *mdnsHostname = "wortuhr";
+const unsigned long setupWifiTimeoutMs = 30UL * 60UL * 1000UL;
+const unsigned long clockUpdateIntervalMs = 5000UL;
+const int wintertimeAdjustSeconds = 1 * 60 * 60; // UTC +1 hour
+const int summerTimeAdjustSeconds = 2 * 60 * 60; // UTC +2 hour
+
 Adafruit_NeoPixel pixels(NUM_LEDS, DATA_PIN, NEO_RGB + NEO_KHZ800);
 RTC_DS3231 rtc;
+WebServer server(80);
 int brightnessRed = 0;
 int brightnessGreen = 20;
 int brightnessBlue = 10;
+bool setupWifiActive = false;
+unsigned long setupWifiStartedAt = 0;
+unsigned long lastClockUpdateAt = 0;
+
+DateTime getCurrentTime();
+bool isGermanDST(const DateTime &utc);
 
 void setLed(int number, int value_r, int value_g, int value_b)
 {
   pixels.setPixelColor(number, pixels.Color(value_g, value_r, value_b, 0));
+}
+
+String twoDigits(int value)
+{
+  return value < 10 ? "0" + String(value) : String(value);
+}
+
+String formatDateTime(DateTime time)
+{
+  return twoDigits(time.day()) + "." + twoDigits(time.month()) + "." + String(time.year()) + " " +
+         twoDigits(time.hour()) + ":" + twoDigits(time.minute()) + ":" + twoDigits(time.second());
+}
+
+DateTime convertGermanLocalTimeToUtc(const DateTime &local)
+{
+  DateTime summerCandidate(local.unixtime() - summerTimeAdjustSeconds);
+  if (isGermanDST(summerCandidate))
+  {
+    return summerCandidate;
+  }
+
+  return DateTime(local.unixtime() - wintertimeAdjustSeconds);
+}
+
+void handleRoot()
+{
+  DateTime now = getCurrentTime();
+  unsigned long elapsedMs = millis() - setupWifiStartedAt;
+  unsigned long remainingSeconds = elapsedMs >= setupWifiTimeoutMs ? 0 : (setupWifiTimeoutMs - elapsedMs) / 1000UL;
+
+  String html = R"(
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wortuhr</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #202124; }
+    main { max-width: 420px; margin: 40px auto; padding: 24px; }
+    h1 { margin: 0 0 24px; font-size: 28px; }
+    .label { margin: 0 0 6px; color: #5f6368; font-size: 14px; }
+    .time { margin: 0 0 20px; font-size: 30px; font-weight: 700; }
+    .controls { display: grid; gap: 12px; margin: 24px 0; }
+    .row { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 10px; }
+    .value { min-height: 44px; display: grid; place-items: center; border: 1px solid #c9cdd2; border-radius: 6px; background: white; font-size: 22px; font-weight: 700; }
+    form { margin: 0; }
+    button { box-sizing: border-box; width: 100%; min-height: 44px; border: 0; border-radius: 6px; background: #1a73e8; color: white; font-size: 24px; font-weight: 700; }
+    .hint { margin: 0; color: #5f6368; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Wortuhr</h1>
+    <p class="label">Aktuelle interne Uhrzeit</p>
+    <p class="time">)" + formatDateTime(now) + R"(</p>
+    <section class="controls">
+      <p class="label">Uhrzeit anpassen</p>
+      <div class="row">
+        <form action="/adjusttime" method="post"><input type="hidden" name="field" value="hour"><input type="hidden" name="delta" value="-1"><button type="submit">-</button></form>
+        <div class="value">Stunde )" + twoDigits(now.hour()) + R"(</div>
+        <form action="/adjusttime" method="post"><input type="hidden" name="field" value="hour"><input type="hidden" name="delta" value="1"><button type="submit">+</button></form>
+      </div>
+      <div class="row">
+        <form action="/adjusttime" method="post"><input type="hidden" name="field" value="minute"><input type="hidden" name="delta" value="-1"><button type="submit">-</button></form>
+        <div class="value">Minute )" + twoDigits(now.minute()) + R"(</div>
+        <form action="/adjusttime" method="post"><input type="hidden" name="field" value="minute"><input type="hidden" name="delta" value="1"><button type="submit">+</button></form>
+      </div>
+      <div class="row">
+        <form action="/adjusttime" method="post"><input type="hidden" name="field" value="second"><input type="hidden" name="delta" value="-1"><button type="submit">-</button></form>
+        <div class="value">Sekunde )" + twoDigits(now.second()) + R"(</div>
+        <form action="/adjusttime" method="post"><input type="hidden" name="field" value="second"><input type="hidden" name="delta" value="1"><button type="submit">+</button></form>
+      </div>
+    </section>
+    <p class="hint">WLAN bleibt noch ca. )" + String(remainingSeconds / 60UL) + R"( Minuten aktiv.</p>
+  </main>
+</body>
+</html>
+  )";
+
+  server.send(200, "text/html; charset=utf-8", html);
+}
+
+void handleAdjustTime()
+{
+  if (!server.hasArg("field") || !server.hasArg("delta"))
+  {
+    server.send(400, "text/plain; charset=utf-8", "Feld oder Richtung fehlt.");
+    return;
+  }
+
+  String field = server.arg("field");
+  int delta = server.arg("delta").toInt();
+
+  if (delta != -1 && delta != 1)
+  {
+    server.send(400, "text/plain; charset=utf-8", "Ungueltige Richtung.");
+    return;
+  }
+
+  int deltaSeconds = 0;
+  if (field == "hour")
+  {
+    deltaSeconds = delta * 60 * 60;
+  }
+  else if (field == "minute")
+  {
+    deltaSeconds = delta * 60;
+  }
+  else if (field == "second")
+  {
+    deltaSeconds = delta;
+  }
+  else
+  {
+    server.send(400, "text/plain; charset=utf-8", "Ungueltiges Feld.");
+    return;
+  }
+
+  DateTime currentLocal = getCurrentTime();
+  DateTime newLocal(currentLocal.unixtime() + deltaSeconds);
+  DateTime newUtc = convertGermanLocalTimeToUtc(newLocal);
+  rtc.adjust(newUtc);
+  pixels.clear();
+  pixels.show();
+
+  Serial.print("time adjusted via web interface, local: ");
+  Serial.println(formatDateTime(newLocal));
+  Serial.print("stored utc: ");
+  Serial.println(formatDateTime(newUtc));
+
+  server.sendHeader("Location", "/");
+  server.send(303, "text/plain", "");
+}
+
+void startSetupWifi()
+{
+  Serial.println("starting setup wifi...");
+  WiFi.mode(WIFI_AP);
+
+  bool started = WiFi.softAP(setupWifiSsid, setupWifiPassword);
+  if (started)
+  {
+    setupWifiActive = true;
+    setupWifiStartedAt = millis();
+
+    Serial.println("setup wifi started");
+    Serial.print("ssid: ");
+    Serial.println(setupWifiSsid);
+    Serial.print("ip: ");
+    Serial.println(WiFi.softAPIP());
+
+    server.on("/", handleRoot);
+    server.on("/adjusttime", HTTP_POST, handleAdjustTime);
+    server.begin();
+    Serial.println("web server started");
+
+    if (MDNS.begin(mdnsHostname))
+    {
+      MDNS.addService("http", "tcp", 80);
+      Serial.print("mdns started: http://");
+      Serial.print(mdnsHostname);
+      Serial.println(".local");
+    }
+    else
+    {
+      Serial.println("mdns could not be started");
+    }
+
+    Serial.println("setup wifi will stop automatically after 30 minutes");
+  }
+  else
+  {
+    setupWifiActive = false;
+    Serial.println("setup wifi could not be started");
+  }
+}
+
+void checkSetupWifiTimeout()
+{
+  if (setupWifiActive)
+  {
+    server.handleClient();
+  }
+
+  if (setupWifiActive && (millis() - setupWifiStartedAt >= setupWifiTimeoutMs))
+  {
+    Serial.println("setup wifi timeout reached, stopping wifi...");
+    server.stop();
+    MDNS.end();
+    WiFi.softAPdisconnect(true);
+    WiFi.mode(WIFI_OFF);
+    setupWifiActive = false;
+    Serial.println("setup wifi stopped");
+  }
 }
 
 void setup()
@@ -43,6 +256,7 @@ void setup()
 
   // DateTime time = DateTime(2022, 12, 22, 19, 11, 0);
   // rtc.adjust(time);
+  startSetupWifi();
   // Wifi
   // Serial.println("server...");
   //  Responder of root page and apply page handled directly from WebServer class.
@@ -225,9 +439,6 @@ void checkForTimeUpdate()
     }
   }
 }
-
-int wintertimeAdjustSeconds = 1 * 60 * 60; // UTC +1 hour
-int summerTimeAdjustSeconds = 2 * 60 * 60; // UTC +2 hour
 
 bool isGermanDST(const DateTime &utc)
 {
@@ -888,10 +1099,15 @@ void testCornerLeds()
 
 void loop()
 {
-  checkForTimeUpdate();
-  printDateTime(getCurrentTime());
-  // letAllShine();
-  displayCurrentTime();
-  delay(5000);
-  Serial.println("-----------------");
+  checkSetupWifiTimeout();
+
+  if (lastClockUpdateAt == 0 || millis() - lastClockUpdateAt >= clockUpdateIntervalMs)
+  {
+    lastClockUpdateAt = millis();
+    checkForTimeUpdate();
+    printDateTime(getCurrentTime());
+    // letAllShine();
+    displayCurrentTime();
+    Serial.println("-----------------");
+  }
 }
